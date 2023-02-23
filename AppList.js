@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, Image } from "react-native";
 import AppItem from "./AppItem";
 import Database from "./Database";
+import * as FileSystem from "expo-file-system";
 
 export default function AppList({ route, navigation }) {
   const [items, setItems] = useState([]);
@@ -21,21 +22,31 @@ export default function AppList({ route, navigation }) {
       >
         {items.map((item) => {
           return (
-            <AppItem
-              key={item.id}
-              id={item.id}
-              item={
-                item.descricao +
-                " | " +
-                item.finalidade +
-                " | " +
-                item.tipo +
-                " | " +
-                " R$" +
-                item.quantidade
-              }
-              navigation={navigation}
-            />
+            <>
+              <Image
+                source={{ uri: item.image }}
+                style={{ width: 100, height: 100 }}
+              />
+              <AppItem
+                key={item.id}
+                id={item.id}
+                item={
+                  " Endereço: " +
+                  item.descricao +
+                  " | " +
+                  " Finalidade: " +
+                  item.finalidade +
+                  " | " +
+                  " Tipo: " +
+                  item.tipo +
+                  " | " +
+                  " Quantidade: " +
+                  " R$" +
+                  item.quantidade
+                }
+                navigation={navigation}
+              />
+            </>
           );
         })}
       </ScrollView>

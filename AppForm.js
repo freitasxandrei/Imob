@@ -7,9 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  Button,
+  ScrollView,
 } from "react-native";
 import { Feather as Icon } from "@expo/vector-icons";
 import Database from "./Database";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 
 export default function ({ route, navigation }) {
   const id = route.params ? route.params.id : undefined;
@@ -17,6 +21,27 @@ export default function ({ route, navigation }) {
   const [finalidade, setFinalidade] = useState("");
   const [tipo, setTipo] = useState("");
   const [quantidade, setQuantidade] = useState("");
+  const [image, setImage] = useState(null);
+
+  // const imageUri = "file:///path/to/image.jpg";
+  // const base64Image = FileSystem.readAsStringAsync(imageUri, {
+  //   encoding: FileSystem.EncodingType.Base64,
+  // });
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      setImage(result.uri);
+    }
+  };
 
   useEffect(() => {
     if (!route.params) return;
@@ -24,6 +49,7 @@ export default function ({ route, navigation }) {
     setTipo(route.params.finalidade);
     setTipo(route.params.tipo);
     setQuantidade(route.params.quantidade.toString());
+    setTipo(route.params.image);
   }, [route]);
 
   function handleDescriptionChange(descricao) {
@@ -43,51 +69,88 @@ export default function ({ route, navigation }) {
   }
 
   async function handleButtonPress() {
-    const listItem = { descricao, finalidade, tipo, quantidade: parseInt(quantidade) };
+    const listItem = {
+      descricao,
+      finalidade,
+      tipo,
+      quantidade: parseInt(quantidade),
+      image,
+    };
     Database.saveItem(listItem, id).then((response) =>
       navigation.navigate("Anúncios", listItem)
     );
   }
 
+  function handleDeletePress() {
+    Alert.alert(
+        "Atenção",
+        "Você tem certeza que deseja excluir este item?",
+        [
+            {
+                text: "Não",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+            },
+            {
+                text: "Sim", onPress: () => {
+                    Database.deleteItem(props.id)
+                        .then(response => props.navigation.navigate("Anúncios", { id: props.id }));
+                }
+            }
+        ],
+        { cancelable: false }
+    );
+}
+
   return (
     <View style={styles.container}>
       <Image style={styles.image} source={require("./assets/imob.png")} />
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          onChangeText={handleDescriptionChange}
-          placeholder="Qual o endereço?"
-          clearButtonMode="always"
-          value={descricao}
-        />
-        <TextInput
-          style={styles.input}
-          onChangeText={handleFinalityChange}
-          placeholder="Qual a finalidade? Aluguel ou venda."
-          clearButtonMode="always"
-          value={finalidade}
-        />
-        <TextInput
-          style={styles.input}
-          onChangeText={handleTypeChange}
-          placeholder="Qual o tipo? Casa, apartamente ou comércio."
-          clearButtonMode="always"
-          value={tipo}
-        />
-        <TextInput
-          style={styles.input}
-          onChangeText={handleQuantityChange}
-          placeholder="Qual o valor?"
-          keyboardType={"numeric"}
-          clearButtonMode="always"
-          value={quantidade.toString()}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleButtonPress}>
-          <View style={styles.buttonContainer}>
-            <Icon name="save" size={22} color="white" />
-            <Text style={styles.buttonText}>Salvar</Text>
-          </View>
-        </TouchableOpacity>
+        <ScrollView>
+          <TextInput
+            style={styles.input}
+            onChangeText={handleDescriptionChange}
+            placeholder="Qual o endereço?"
+            clearButtonMode="always"
+            value={descricao}
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={handleFinalityChange}
+            placeholder="Qual a finalidade? Aluguel ou venda."
+            clearButtonMode="always"
+            value={finalidade}
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={handleTypeChange}
+            placeholder="Qual o tipo? Casa, apartamente ou comércio."
+            clearButtonMode="always"
+            value={tipo}
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={handleQuantityChange}
+            placeholder="Qual o valor?"
+            keyboardType={"numeric"}
+            clearButtonMode="always"
+            value={quantidade.toString()}
+          />
+          <Button title="Selecione uma imagem" onPress={pickImage} />
+          {image && (
+            <Image
+              source={{ uri: image }}
+              style={{ width: 200, height: 200, alignItems: "center", marginLeft: "20%", marginTop: "5%" }}
+              value={image}
+            />
+          )}
+          <TouchableOpacity style={styles.button} onPress={handleButtonPress}>
+            <View style={styles.buttonContainer}>
+              <Icon name="save" size={22} color="white" />
+              <Text style={styles.buttonText}>Salvar</Text>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
       <StatusBar style="light" />
     </View>
